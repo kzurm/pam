@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html ng-app='cicFloorMaps'>
+  <head>
+    <title>CIC Maps</title>
+    <meta content='width=device-width, initial-scale=1.0' name='viewport'>
+    <link href='css/bootstrap.css' media='screen' rel='stylesheet'>
+    <link href='//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css' rel='stylesheet'>
+    <link href='css/custom.css' media='screen' rel='stylesheet'>
+    <script src='js/jquery-1.7.2.js'></script>
+    <script src='js/jquery.svg.js'></script>
+    <script src='js/jquery.svgdom.js'></script>
+    <script src='js/underscore-1.5.1.js'></script>
+    <script src='js/angular-1.1.5.js'></script>
+  </head>
+  <body data-spy='scroll' data-target='#floors'>
+    <div class='container' id='theview' ng-controller='FloorCtrl'>
+      <div class='popover' id='hovercard'>
+        <div class='popover-title'>
+          <b>
+            <span data-field='Space #'></span>
+            :
+            <span data-field='Name'></span>
+          </b>
+          <br>
+          <span data-field='Status'></span>
+          <br>
+          <span data-field='Client - Name'></span>
+        </div>
+        <div class='popover-content'>
+          <div>
+            Description:
+            <span data-field='Description'></span>
+          </div>
+          <div>
+            Base:
+            <span data-field='Base space price'></span>
+          </div>
+          <div>
+            Min People:
+            <span data-field='Min people'></span>
+          </div>
+          <div>
+            Max People:
+            <span data-field='Max people'></span>
+          </div>
+          <div>
+            Min Fees:
+            <span data-field='Min fees'></span>
+          </div>
+          <div>
+            Advisories:
+            <span data-field='Advisories'></span>
+          </div>
+          <div class='sales-mode'>
+            Hold Date:
+            <span data-field='Hold through'></span>
+          </div>
+          <div class='sales-mode'>
+            Hold Person:
+            <span data-field='Placed on hold by'></span>
+          </div>
+          <div class='sales-mode'>
+            Hold Note:
+            <span data-field='Hold'></span>
+          </div>
+          <div>
+            (
+            <span data-field='Path'></span>
+            )
+          </div>
+        </div>
+      </div>
+      <div class='container'>
+        <div class='navbar navbar-fixed-top'>
+          <div class='navbar-inner'>
+            <div class='container'>
+              <a class='brand' href='#'>
+                <img class='logo' src='/images/cic.png'>
+              </a>
+              <ul class='nav'>
+                <li class='dropdown'>
+                  <a class='dropdown-toggle' data-toggle='dropdown' href='/index.html?{{building.bldg}}' rel='tooltip' title='Change Building'>
+                    {{building.city.toUpperCase()}} - {{building.name}}
+                    <b class='caret'></b>
+                  </a>
+                  <ul class='dropdown-menu'>
+                    <li>
+                      <a href='/index.html?50milk'>BOS - 50 Milk Street</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?1bw'>CAM - One Broadway</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?101m'>CAM - 101 Main Street</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?4240'>STL - 4240 Duncan Ave</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?cet1'>STL - CET 1</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?cet2'>STL - CET 2</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?miami'>MIA - 1951 NW 7th Ave</a>
+                    </li>
+                    <li>
+                      <a href='/index.html?stat45'>ROT - Stationsplein 45</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class='active' id='floorbtn' rel='tooltip' title='Show/Hide Floor Linkbar'>
+                  <a data-target='#none1' onclick='$("#floors").toggle();$("#floorbtn").toggleClass("active");'>
+                    <i class='icon-external-link'></i>
+                  </a>
+                </li>
+                <li id='overlaybtn' rel='tooltip' title='Show/Hide Overlay'>
+                  <a data-target='#none2' onclick='$("#overlaybtn").toggleClass("active");toggleOverlay()'>
+                    <i class='icon-picture'></i>
+                  </a>
+                </li>
+              </ul>
+              <ul class='nav pull-right'>
+                <li style='padding-top: 5px'>
+                  <form class='form-search form-inline'>
+                    <div class='input-append'>
+                      <input class='input-medium search-query' ng-change='search()' ng-model='searchText' placeholder='Search' type='text'>
+                      <a class='btn btn-medium add-on' ng-click='search()'>
+                        <i class='icon-search'></i>
+                      </a>
+                    </div>
+                    <div class='dropdown' ng-class='{open:showBox}'>
+                      <div class='dropdown-menu' style='padding:10px; height:300px; overflow: scroll;'>
+                        <small>
+                          <a ng-click='clearSearch()'>(clear search)</a>
+                        </small>
+                        <h4 ng-hide="searchResults['spaces'].length || searchResults['clients'].length">No Results Found</h4>
+                        <h4 ng-show="searchResults['spaces'].length">Spaces</h4>
+                        <ul class='unstyled'>
+                          <li ng-repeat="result in searchResults['spaces']">
+                            <a href='{{resultLink(result)}}'>
+                              Space: {{result["Name"]}} ({{result["Floor"]}})
+                              <br>
+                              Client: {{result["Client"]}}
+                            </a>
+                          </li>
+                        </ul>
+                        <h4 ng-show="searchResults['clients'].length">Clients</h4>
+                        <ul class='unstyled'>
+                          <li ng-repeat="result in searchResults['clients']">
+                            <a href='{{resultLink(result)}}'>
+                              Space: {{result["Name"]}} ({{result["Floor"]}})
+                              <br>
+                              Client: {{result["Client"]}}
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </form>
+                </li>
+                <!-- %li{:title=>"Logged in as: #{session[:auth_hash]['info']['email']}",:rel=>"tooltip"} -->
+                <!-- %a{'data-target'=>'#'} Welcome, #{session[:auth_hash]['info']['first_name']} -->
+                <li>
+                  <a href='/logout'>Log Out</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class='navbar-inner' id='floors'>
+            <div class='container'>
+              <ul class='nav' ng-repeat='floor in floors'>
+                <li>
+                  <a data-target='{{"#" + floor.id}}' onclick='{{&#x0027;showFloor("&#x0027; + floor.id + &#x0027;")&#x0027;}}'>{{floor.name}}</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class='container'>
+        <div class='row' ng-class="{'first': $first, 'last-floor': $last}" ng-repeat='floor in floors'>
+          <div class='floor well' id='{{floor.id}}'>
+            <h4 class='floor_title {{floor.title}}'>{{floor.name}}</h4>
+            <span class='floor-svg' ng-include="'images/maps/' + floor.city + '/' + floor.city + '_' + floor.bldg + '_' + floor.id + '.svg'"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src='js/bootstrap.js'></script>
+  <script src='application.js'></script>
+  <script>
+    $(document).ready(function(){ $("[rel=tooltip]").tooltip({placement:'bottom'}); });
+  </script>
+</html>
